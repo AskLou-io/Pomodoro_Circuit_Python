@@ -1,211 +1,121 @@
-import board
-import busio
-import displayio
-import terminalio
-import time
-import math
-import digitalio
-import gc9a01
-import array
-import analogio  # For onboard microphone
-from adafruit_display_text import label
-from adafruit_display_shapes.circle import Circle
-from fourwire import FourWire  # Updated import per deprecation notice
+# AskLou.io Pomodoro Timer
 
-# Release any displays
-displayio.release_displays()
+![AskLou.io Pomodoro Timer](AskLou_01.png)
 
-# Define pins
-tft_dc = board.D3
-tft_cs = board.D1
-tft_bl = board.D6
+> A voice-controlled Pomodoro timer built with the Seeed Studio XIAO ESP32S3 Sense and Round Display for XIAO. Stay productive with hands-free time management!
 
-# Set up SPI display
-spi = busio.SPI(clock=board.SCK, MOSI=board.MOSI)
-display_bus = FourWire(spi, command=tft_dc, chip_select=tft_cs)
-display = gc9a01.GC9A01(display_bus, width=240, height=240, rotation=0)
+## Project Overview
 
-# Backlight
-backlight = digitalio.DigitalInOut(tft_bl)
-backlight.direction = digitalio.Direction.OUTPUT
-backlight.value = True
+The AskLou.io Pomodoro Timer is a compact, voice-activated productivity tool that helps you implement the popular Pomodoro Technique for time management. Using simple voice commands, you can start work sessions, take breaks, and manage your productivity without touching your computer or phone.
 
-# --- Onboard microphone setup ---
-# Using AnalogIn on board.A0 for XIAO ESP32-S3 Sense onboard mic.
-mic = analogio.AnalogIn(board.A0)
-# You might need to adjust the threshold value after testing
-LOUD_THRESHOLD = 30000
+## Why AskLou.io Pomodoro Timer?
 
-def detect_loud_sound():
-    """
-    Returns True if the microphone analog reading exceeds the threshold.
-    """
-    try:
-        # Read the analog value (0 - 65535)
-        value = mic.value
-        return value > LOUD_THRESHOLD
-    except Exception as e:
-        print("Microphone error:", e)
-        return False
+Traditional Pomodoro timers require manual interaction, breaking your flow and concentration. AskLou.io solves this problem with voice commands, allowing you to manage your time without lifting a finger. The elegant circular display provides at-a-glance status of your current session, helping you stay focused and productive.
 
-# Create root display groups
-main_group = displayio.Group()
-background_group = displayio.Group()
-foreground_group = displayio.Group()
-main_group.append(background_group)
-main_group.append(foreground_group)
-display.root_group = main_group
+## Features
 
-# Create background circle
-circle_bg = Circle(120, 120, 100, outline=0x444444)
-background_group.append(circle_bg)
+- **Voice Control**: Start and pause your timer with simple voice commands
+- **Multiple Session Types**: Standard work sessions (25 min), short breaks (5 min), and long breaks (15 min)
+- **Visual Progress Tracking**: Intuitive circular progress indicator shows remaining time
+- **Distraction-Free**: No apps, no notifications, just focused productivity
+- **Customizable**: Easy to modify session durations to match your personal workflow
+- **Low Power**: Designed for all-day use at your desk
+- **Standalone Operation**: No smartphone or computer required once set up
 
-# Session types
-WORK = "WORK"
-BREAK = "BREAK"
-LONG_BREAK = "LONG"
+## Hardware
 
-session_durations = {
-    WORK: 25 * 60,
-    BREAK: 5 * 60,
-    LONG_BREAK: 15 * 60,
-}
+### Components Required
 
-# Session cycle is only used for timer rollover if you want an automatic cycle.
-# You can modify this behavior as needed.
-session_cycle = [WORK, BREAK] * 3 + [WORK, LONG_BREAK]
+- Seeed Studio XIAO ESP32S3 Sense
+- Seeed Studio Round Display for XIAO (1.28" 240x240 GC9A01 LCD)
+- USB-C cable for power
+- Optional: 3D printed case (files included in project)
 
-# UI Labels
-session_label = label.Label(terminalio.FONT, text="", color=0xFFFFFF, scale=2)
-session_label.x = 90
-session_label.y = 80
-foreground_group.append(session_label)
+### Why We Chose This Hardware
 
-timer_label = label.Label(terminalio.FONT, text="", color=0xFFFFFF, scale=3)
-timer_label.x = 75
-timer_label.y = 120
-foreground_group.append(timer_label)
+The XIAO ESP32S3 Sense includes an onboard microphone, making it perfect for voice control applications. Its compact form factor paired with the stunning round display creates an elegant desktop companion that doesn't distract from your workspace aesthetic.
 
-# Optional: Remove status label since you only want voice commands.
-# status_label = label.Label(terminalio.FONT, text="", color=0xFFFFFF)
-# status_label.x = 80
-# status_label.y = 160
-# foreground_group.append(status_label)
+## Build Process
 
-# Pre-create arc segments for performance
-arc_segments = []
-arc_radius = 95
-total_steps = 120  # Reduced for performance
-arc_color_work = 0x00FF00
-arc_color_break = 0x00BFFF
+### 1. Hardware Assembly
 
-for i in range(total_steps):
-    angle = math.radians(i * (360 / total_steps))
-    x = int(120 + arc_radius * math.cos(angle))
-    y = int(120 + arc_radius * math.sin(angle))
-    pixel = Circle(x, y, 2, fill=0x000000, outline=0x000000)
-    foreground_group.append(pixel)
-    arc_segments.append(pixel)
+- Connect the Round Display to the XIAO ESP32S3 Sense board
+- The display connects directly to the XIAO's pins - no soldering required!
+- Optional: Install in 3D printed case for a finished look
 
-def update_progress_arc(percentage, session_type):
-    steps = int(percentage * total_steps)
-    
-    # Choose arc color based on session type
-    active_color = arc_color_work if session_type == WORK else arc_color_break
-    
-    for i, segment in enumerate(arc_segments):
-        segment.fill = active_color if i < steps else 0x000000
+### 2. Software Setup
 
-def format_time(seconds):
-    m = seconds // 60
-    s = seconds % 60
-    return f"{m:02}:{s:02}"
+**Set up CircuitPython**
+- Download CircuitPython 8.x or newer from CircuitPython.org
+- Put your board in bootloader mode (double-click the reset button)
+- Drag and drop the CircuitPython UF2 file onto the board's drive
 
-# --- Voice Commands ---
-# Commands: "start timer", "pause timer", "start short break", "start long break"
-voice_commands = ["start timer", "pause timer", "start short break", "start long break"]
-voice_index = 0
+**Install Required Libraries**
+- Download these libraries from the CircuitPython bundle:
+  - adafruit_display_text
+  - adafruit_display_shapes
+  - gc9a01.mpy
+  - analogio (for microphone functionality)
+- Copy them to the lib folder on your CircuitPython device.
 
-def simulate_voice_command():
-    global voice_index, current_session, session_seconds, session_start, timer_active
-    command = voice_commands[voice_index]
-    print(f"Voice Command Detected: {command}")
-    
-    if command == "start timer":
-        timer_active = True
-        # If starting timer, use current session or default to WORK if not set.
-        if current_session not in [WORK, BREAK, LONG_BREAK]:
-            current_session = WORK
-            session_seconds = session_durations[WORK]
-        session_start = time.monotonic()
-    elif command == "pause timer":
-        timer_active = False
-    elif command == "start short break":
-        current_session = BREAK
-        session_seconds = session_durations[BREAK]
-        timer_active = True
-        session_start = time.monotonic()
-    elif command == "start long break":
-        current_session = LONG_BREAK
-        session_seconds = session_durations[LONG_BREAK]
-        timer_active = True
-        session_start = time.monotonic()
-    
-    # Cycle to the next command for testing/demo purposes.
-    voice_index = (voice_index + 1) % len(voice_commands)
+### 3. Code Deployment
 
-# Initial session settings
-session_index = 0
-current_session = WORK  # default session
-session_seconds = session_durations[current_session]
-timer_active = False  # Timer is paused until a voice command starts it
-session_start = time.monotonic()
+Simply copy the code.py file from this repository to your CircuitPython device, and the timer will start running automatically!
 
-update_progress_arc(0, current_session)
+## How It Works
 
-# For debouncing the voice command trigger
-last_sound_time = time.monotonic()
+- **Voice Detection**: The onboard microphone listens for sounds above a threshold
+- **Command Simulation**: For the demo version, commands cycle through a preset list
+- **Timer Logic**: Tracks work sessions, short breaks, and long breaks
+- **Visual Feedback**: The circular display shows session type and remaining time
+- **Progress Indicator**: An illuminated arc shows progress through the current session
 
-# Display version label (optional)
-version_label = label.Label(terminalio.FONT, text="v1.2", color=0x888888)
-version_label.x = 5
-version_label.y = 5
-foreground_group.append(version_label)
+The AskLou.io Pomodoro Timer responds to these voice commands:
+- "Start timer" - Begin a 25-minute work session
+- "Pause timer" - Pause the current session
+- "Start short break" - Begin a 5-minute break
+- "Start long break" - Begin a 15-minute break
 
-# Main loop
-last_second = -1
+## Customization Options
 
-while True:
-    now = time.monotonic()
-    
-    # Check for loud sound to trigger a voice command.
-    # We check at least 1 second apart to debounce.
-    if detect_loud_sound() and (now - last_sound_time) > 1.0:
-        simulate_voice_command()
-        last_sound_time = now
+You can customize your AskLou.io Pomodoro Timer in several ways:
+- **Session Durations**: Modify the session_durations dictionary to change work or break lengths
+- **Voice Sensitivity**: Adjust the LOUD_THRESHOLD value based on your environment
+- **Visual Theme**: Change the arc colors for different session types
+- **Command Words**: Update the voice_commands list to use different phrases
 
-    if timer_active:
-        elapsed = int(now - session_start)
-        remaining = session_seconds - elapsed
-        
-        if remaining <= 0:
-            # Timer finished, automatically move to next session in cycle
-            session_index = (session_index + 1) % len(session_cycle)
-            current_session = session_cycle[session_index]
-            session_seconds = session_durations[current_session]
-            session_start = now
-            remaining = session_seconds
-    else:
-        # Timer paused: keep the remaining time static
-        elapsed = int(now - session_start)
-        remaining = session_seconds - elapsed
+## Future Enhancements
 
-    # Update display only if the second has changed
-    current_second = int(remaining)
-    if current_second != last_second:
-        session_label.text = current_session
-        timer_label.text = format_time(remaining)
-        update_progress_arc(1.0 - (remaining / session_seconds), current_session)
-        last_second = current_second
+Potential improvements for future versions:
+- Improved voice recognition for more reliable command detection
+- Haptic or audio feedback when sessions end
+- Connectivity with productivity apps for session logging
+- Small speaker for audio notifications
+- Battery power for portability
 
-    time.sleep(0.1)
+## Resources
+
+- [GitHub Repository](https://github.com/AskLou-io/Pomodoro_Circuit_Python/blob/main/README.md)
+- [Hackster.io Project](https://www.hackster.io/peter-machona/asklou-io-pomodoro-timer-a7a1f2)
+- [XIAO ESP32S3 Documentation](https://wiki.seeedstudio.com/xiao_esp32s3_getting_started/)
+- [Round Display Documentation](https://wiki.seeedstudio.com/Round-Display-for-XIAO/)
+
+## Credits
+
+- Hardware platform by Seeed Studio
+- Pomodoro technique by Francesco Cirillo
+- Project by Peter Machona
+
+## License
+
+This project is released under the Creative Commons Attribution-NonCommercial (CC BY-NC) license. This means you are free to:
+- **Share** — copy and redistribute the material in any medium or format
+- **Adapt** — remix, transform, and build upon the material
+
+Under the following terms:
+- **Attribution** — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+- **NonCommercial** — You may not use the material for commercial purposes.
+
+---
+
+AskLou.io Pomodoro Timer - Focused productivity, just ask for it.
