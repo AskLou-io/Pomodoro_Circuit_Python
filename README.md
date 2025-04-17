@@ -1,6 +1,8 @@
 # AskLou.io Pomodoro Timer
 
-A voice-controlled Pomodoro timer built with the Seeed Studio XIAO ESP32S3 Sense and Round Display for XIAO. Stay productive with hands-free time management!
+![AskLou.io Pomodoro Timer](AskLou_01.png)
+
+> A voice-controlled Pomodoro timer built with the Seeed Studio XIAO ESP32S3 Sense and Round Display for XIAO. Stay productive with hands-free time management!
 
 ## Project Overview
 
@@ -43,22 +45,18 @@ The XIAO ESP32S3 Sense includes an onboard microphone, making it perfect for voi
 
 ### 2. Software Setup
 
-#### Set up CircuitPython
-
-- Download CircuitPython 8.x or newer from [CircuitPython.org](https://circuitpython.org/)
+**Set up CircuitPython**
+- Download CircuitPython 8.x or newer from CircuitPython.org
 - Put your board in bootloader mode (double-click the reset button)
 - Drag and drop the CircuitPython UF2 file onto the board's drive
 
-#### Install Required Libraries
-
-Download these libraries from the CircuitPython bundle:
-
-- adafruit_display_text
-- adafruit_display_shapes
-- gc9a01.mpy
-- analogio (for microphone functionality)
-
-Copy them to the lib folder on your CircuitPython device.
+**Install Required Libraries**
+- Download these libraries from the CircuitPython bundle:
+  - adafruit_display_text
+  - adafruit_display_shapes
+  - gc9a01.mpy
+  - analogio (for microphone functionality)
+- Copy them to the lib folder on your CircuitPython device.
 
 ### 3. Code Deployment
 
@@ -66,11 +64,11 @@ Simply copy the code.py file from this repository to your CircuitPython device, 
 
 ## How It Works
 
-1. **Voice Detection**: The onboard microphone listens for sounds above a threshold
-2. **Command Simulation**: For the demo version, commands cycle through a preset list
-3. **Timer Logic**: Tracks work sessions, short breaks, and long breaks
-4. **Visual Feedback**: The circular display shows session type and remaining time
-5. **Progress Indicator**: An illuminated arc shows progress through the current session
+- **Voice Detection**: The onboard microphone listens for sounds above a threshold
+- **Command Simulation**: For the demo version, commands cycle through a preset list
+- **Timer Logic**: Tracks work sessions, short breaks, and long breaks
+- **Visual Feedback**: The circular display shows session type and remaining time
+- **Progress Indicator**: An illuminated arc shows progress through the current session
 
 The AskLou.io Pomodoro Timer responds to these voice commands:
 - "Start timer" - Begin a 25-minute work session
@@ -81,16 +79,14 @@ The AskLou.io Pomodoro Timer responds to these voice commands:
 ## Customization Options
 
 You can customize your AskLou.io Pomodoro Timer in several ways:
-
-- **Session Durations**: Modify the `session_durations` dictionary to change work or break lengths
-- **Voice Sensitivity**: Adjust the `LOUD_THRESHOLD` value based on your environment
+- **Session Durations**: Modify the session_durations dictionary to change work or break lengths
+- **Voice Sensitivity**: Adjust the LOUD_THRESHOLD value based on your environment
 - **Visual Theme**: Change the arc colors for different session types
-- **Command Words**: Update the `voice_commands` list to use different phrases
+- **Command Words**: Update the voice_commands list to use different phrases
 
 ## Future Enhancements
 
 Potential improvements for future versions:
-
 - Improved voice recognition for more reliable command detection
 - Haptic or audio feedback when sessions end
 - Connectivity with productivity apps for session logging
@@ -99,28 +95,26 @@ Potential improvements for future versions:
 
 ## Resources
 
-- [GitHub Repository](#) (Link to your repo)
-- [Hackster.io Project](#) (Link to your Hackster project)
+- [GitHub Repository](https://github.com/AskLou-io/Pomodoro_Circuit_Python/blob/main/README.md)
+- [Hackster.io Project](https://www.hackster.io/peter-machona/asklou-io-pomodoro-timer-a7a1f2)
 - [XIAO ESP32S3 Documentation](https://wiki.seeedstudio.com/xiao_esp32s3_getting_started/)
-- [Round Display Documentation](https://wiki.seeedstudio.com/XIAO-Round-Display/)
+- [Round Display Documentation](https://wiki.seeedstudio.com/Round-Display-for-XIAO/)
 
 ## Credits
 
 - Hardware platform by Seeed Studio
 - Pomodoro technique by Francesco Cirillo
-- Project by [Your Name]
+- Project by Peter Machona
 
 ## License
 
 This project is released under the Creative Commons Attribution-NonCommercial (CC BY-NC) license. This means you are free to:
-
-- Share — copy and redistribute the material in any medium or format
-- Adapt — remix, transform, and build upon the material
+- **Share** — copy and redistribute the material in any medium or format
+- **Adapt** — remix, transform, and build upon the material
 
 Under the following terms:
-
-- Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
-- NonCommercial — You may not use the material for commercial purposes.
+- **Attribution** — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+- **NonCommercial** — You may not use the material for commercial purposes.
 
 ---
 
